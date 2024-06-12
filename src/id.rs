@@ -3,14 +3,18 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-static next_id: AtomicUsize = AtomicUsize::new(0);
+static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub(crate) struct StoreId(usize);
 
 impl StoreId {
+    pub(crate) const fn invalid() -> Self {
+        Self(0)
+    }
+
     pub(crate) fn new() -> Self {
-        let id = next_id.fetch_add(1, Ordering::Relaxed);
+        let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
         if id > isize::MAX as usize {
             abort()
         }

@@ -18,10 +18,7 @@ impl<T> Store<T> {
     }
 
     pub fn insert(&mut self, value: T) -> Ref<T> {
-        Ref {
-            id: self.id,
-            ptr: self.storage.alloc(Some(value)) as *mut Option<T>,
-        }
+        Ref::new(self.id, self.storage.alloc(Some(value)))
     }
 
     pub fn get(&self, ptr: &Ref<T>) -> &T {
@@ -31,11 +28,11 @@ impl<T> Store<T> {
 
     pub fn try_get(&self, ptr: &Ref<T>) -> Option<&T> {
         (self.id == ptr.id).then_some(())?;
-        unsafe { (&*ptr.ptr).as_ref() }
+        unsafe { ptr.ptr.as_ref().as_ref() }
     }
 
     pub unsafe fn get_unchecked(&self, ptr: &Ref<T>) -> &T {
-        (&*ptr.ptr).as_ref().unwrap_unchecked()
+        ptr.ptr.as_ref().as_ref().unwrap_unchecked()
     }
 
     pub fn get_mut(&mut self, ptr: &Ref<T>) -> &mut T {
@@ -45,16 +42,16 @@ impl<T> Store<T> {
 
     pub fn try_get_mut(&mut self, ptr: &Ref<T>) -> Option<&mut T> {
         (self.id == ptr.id).then_some(())?;
-        unsafe { (&mut *ptr.ptr).as_mut() }
+        unsafe { (&mut *ptr.ptr.as_ptr()).as_mut() }
     }
 
     pub unsafe fn get_mut_unchecked(&mut self, ptr: &Ref<T>) -> &mut T {
-        (&mut *ptr.ptr).as_mut().unwrap_unchecked()
+        (&mut *ptr.ptr.as_ptr()).as_mut().unwrap_unchecked()
     }
 
     pub fn remove(&mut self, ptr: &Ref<T>) -> Option<T> {
         (self.id == ptr.id).then_some(())?;
-        unsafe { (&mut *ptr.ptr).take() }
+        unsafe { (&mut *ptr.ptr.as_ptr()).take() }
     }
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
